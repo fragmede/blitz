@@ -1,0 +1,59 @@
+[project]
+name = "blitz-shooter"
+version = "1.0.0"
+description = "Custom language, bytecode VM, and shoot'em up game - all rendered with a single GLSL shader"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "fragmede"}
+]
+keywords = ["game", "shader", "language", "compiler", "vm", "opengl"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: GPU",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment :: Arcade",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Interpreters",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "moderngl>=5.8.0",
+    "moderngl-window>=2.4.0",
+    "pyglet>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+blitz = "main:main"
+
+[project.urls]
+Homepage = "https://github.com/fragmede/blitz-shooter"
+Repository = "https://github.com/fragmede/blitz-shooter"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["blitz", "vm", "runtime", "render", "game"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "mypy>=1.0.0",
+]
