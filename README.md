@@ -149,20 +149,29 @@ shader/
 # Install dependencies
 uv pip install moderngl moderngl-window numpy pyglet
 
-# Run the game
+# Run the default game (shooter.blitz)
 uv run python main.py
 
-# Or run without graphics (console mode, no dependencies needed)
-uv run python main.py
+# Run a specific game
+uv run python main.py game/shooter.blitz
+uv run python main.py game/sideways.blitz
+
+# Compile to bytecode only (no run)
+uv run python main.py --compile game/shooter.blitz
+
+# Run pre-compiled bytecode directly
+uv run python main.py game/shooter.blitzc
+uv run python main.py game/sideways.blitzc
 
 # Compile and show bytecode disassembly
-uv run python main.py --debug
+uv run python main.py --debug game/shooter.blitz
 ```
 
 Or with standard pip:
 ```bash
 pip install moderngl moderngl-window numpy pyglet
 python main.py
+python main.py game/shooter.blitzc  # Run pre-compiled
 ```
 
 ## Technical Details
