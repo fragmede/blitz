@@ -30,6 +30,9 @@ def run_game(runtime):
     if not HAS_MODERNGL:
         raise ImportError("moderngl and moderngl_window required. Install with: pip install moderngl moderngl-window pyglet")
 
+    # Store runtime in closure
+    _runtime = runtime
+
     class GameWindow(mglw.WindowConfig):
         """Main game window."""
 
@@ -41,7 +44,7 @@ def run_game(runtime):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
 
-            self.runtime = kwargs.get('runtime')
+            self.runtime = _runtime
 
             # Load fragment shader
             shader_path = Path(__file__).parent / "shader.glsl"
@@ -79,7 +82,7 @@ def run_game(runtime):
             if 'u_entities' in self.uniforms:
                 self.uniforms['u_entities'].value = 0
 
-        def render(self, time: float, frametime: float):
+        def on_render(self, time: float, frametime: float):
             """Render a frame."""
             if self.runtime:
                 # Update game
@@ -143,4 +146,4 @@ def run_game(runtime):
     settings.WINDOW['title'] = GameWindow.title
 
     # Run
-    mglw.run_window_config(GameWindow, args=['--window', 'pyglet'], runtime=runtime)
+    mglw.run_window_config(GameWindow, args=['--window', 'pyglet'])
