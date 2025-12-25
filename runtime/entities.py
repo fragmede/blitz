@@ -37,10 +37,19 @@ class EntityManager:
 
     MAX_ENTITIES = 512
 
-    def __init__(self):
+    def __init__(self, screen_width: int = 800, screen_height: int = 600):
         self.entities: List[Optional[Entity]] = [None] * self.MAX_ENTITIES
         self.active_count = 0
         self.next_id = 1
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self._scale = 1.0
+
+    def set_screen_size(self, width: int, height: int):
+        """Update screen size for velocity scaling."""
+        self.screen_width = width
+        self.screen_height = height
+        self._scale = height / 600.0  # Scale relative to base 600 height
 
     def spawn(self, entity_type: EntityType, x: float, y: float) -> int:
         """Spawn a new entity and return its ID."""
@@ -139,14 +148,16 @@ class EntityManager:
     def _get_default_velocity(self, entity_type: EntityType) -> tuple:
         """Get default velocity for entity type."""
         # Note: In OpenGL, +Y is up
-        velocities = {
+        # Velocities scale with screen size
+        base_velocities = {
             EntityType.PLAYER: (0, 0),
             EntityType.BULLET: (0, 500),   # Bullets go up (+Y)
             EntityType.ENEMY: (0, -100),   # Enemies go down (-Y)
             EntityType.EXPLOSION: (0, 0),
             EntityType.POWERUP: (0, -50),  # Powerups fall down (-Y)
         }
-        return velocities.get(entity_type, (0, 0))
+        vx, vy = base_velocities.get(entity_type, (0, 0))
+        return (vx * self._scale, vy * self._scale)
 
     def to_array(self) -> np.ndarray:
         """Convert entities to a numpy array for shader upload.

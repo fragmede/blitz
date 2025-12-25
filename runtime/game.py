@@ -135,6 +135,10 @@ class GameRuntime:
 
         self.state.time += dt
 
+        # Update screen dimensions in VM globals (for dynamic bounds)
+        self.vm.globals['screen_width'] = float(self.width)
+        self.vm.globals['screen_height'] = float(self.height)
+
         # Update player position in VM globals
         player = self.entities.get(self.player_id)
         if player:

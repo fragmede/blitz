@@ -32,6 +32,7 @@ def run_game(runtime):
 
     # Store runtime in closure
     _runtime = runtime
+    _scale_factor = None  # Will be set on first render
 
     class GameWindow(mglw.WindowConfig):
         """Main game window."""
@@ -84,18 +85,38 @@ def run_game(runtime):
 
         def on_render(self, time: float, frametime: float):
             """Render a frame."""
+            nonlocal _scale_factor
+
             if self.runtime:
+                # Calculate scale factor for Retina/HiDPI displays (once)
+                buffer_size = self.wnd.buffer_size
+                window_size = self.wnd.size
+                scale_x = buffer_size[0] / window_size[0]
+                scale_y = buffer_size[1] / window_size[1]
+
+                # Update runtime dimensions on first frame or if changed
+                if _scale_factor != (scale_x, scale_y):
+                    _scale_factor = (scale_x, scale_y)
+                    # Update runtime to use actual framebuffer dimensions
+                    self.runtime.width = buffer_size[0]
+                    self.runtime.height = buffer_size[1]
+                    # Update entity manager's screen size for velocity scaling
+                    self.runtime.entities.set_screen_size(buffer_size[0], buffer_size[1])
+                    # Update player position to be centered in new dimensions
+                    if hasattr(self.runtime, 'state'):
+                        self.runtime.state.player_x = buffer_size[0] / 2
+                        self.runtime.state.player_y = buffer_size[1] * 0.08  # 8% from bottom
+                        # Sync to entity
+                        player = self.runtime.entities.get(self.runtime.player_id)
+                        if player:
+                            player.x = self.runtime.state.player_x
+                            player.y = self.runtime.state.player_y
+
                 # Update game
                 self.runtime.update(frametime)
 
                 # Get uniform values
                 uniforms = self.runtime.get_render_uniforms()
-
-                # Calculate scale factor for Retina/HiDPI displays
-                buffer_size = self.wnd.buffer_size
-                window_size = self.wnd.size
-                scale_x = buffer_size[0] / window_size[0]
-                scale_y = buffer_size[1] / window_size[1]
 
                 # Update uniforms - use actual framebuffer size for resolution
                 if 'u_resolution' in self.uniforms:
@@ -103,9 +124,7 @@ def run_game(runtime):
                 if 'u_time' in self.uniforms:
                     self.uniforms['u_time'].value = uniforms['u_time']
                 if 'u_player_pos' in self.uniforms:
-                    # Scale player position to framebuffer coordinates
-                    px, py = uniforms['u_player_pos']
-                    self.uniforms['u_player_pos'].value = (px * scale_x, py * scale_y)
+                    self.uniforms['u_player_pos'].value = uniforms['u_player_pos']
                 if 'u_score' in self.uniforms:
                     self.uniforms['u_score'].value = uniforms['u_score']
                 if 'u_lives' in self.uniforms:
@@ -113,11 +132,8 @@ def run_game(runtime):
                 if 'u_entity_count' in self.uniforms:
                     self.uniforms['u_entity_count'].value = uniforms['u_entity_count']
 
-                # Update entity texture - scale positions for HiDPI
-                entity_data = self.runtime.get_entity_data().copy()
-                # Scale x and y positions (columns 0 and 1)
-                entity_data[:, 0] *= scale_x
-                entity_data[:, 1] *= scale_y
+                # Update entity texture - positions are already in correct coords
+                entity_data = self.runtime.get_entity_data()
                 self.entity_texture.write(entity_data.tobytes())
                 self.entity_texture.use(0)
 
