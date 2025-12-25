@@ -138,12 +138,13 @@ class EntityManager:
 
     def _get_default_velocity(self, entity_type: EntityType) -> tuple:
         """Get default velocity for entity type."""
+        # Note: In OpenGL, +Y is up
         velocities = {
             EntityType.PLAYER: (0, 0),
-            EntityType.BULLET: (0, -500),  # Bullets go up
-            EntityType.ENEMY: (0, 100),    # Enemies go down
+            EntityType.BULLET: (0, 500),   # Bullets go up (+Y)
+            EntityType.ENEMY: (0, -100),   # Enemies go down (-Y)
             EntityType.EXPLOSION: (0, 0),
-            EntityType.POWERUP: (0, 50),
+            EntityType.POWERUP: (0, -50),  # Powerups fall down (-Y)
         }
         return velocities.get(entity_type, (0, 0))
 

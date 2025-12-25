@@ -25,7 +25,7 @@ class GameState:
     wave: int = 1
     time: float = 0.0
     player_x: float = 400.0
-    player_y: float = 550.0
+    player_y: float = 50.0  # Player at bottom (low Y in OpenGL coords)
     game_over: bool = False
     paused: bool = False
 
