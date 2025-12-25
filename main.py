@@ -9,7 +9,10 @@ A shoot'em up game with:
 - All graphics rendered in a single GLSL shader
 
 Usage:
-    python main.py [game.blitz]
+    python main.py [game.blitz]           # Compile and run
+    python main.py --compile game.blitz   # Compile to .blitzc only
+    python main.py game.blitzc            # Run pre-compiled bytecode
+    python main.py --debug game.blitz     # Show bytecode disassembly
 """
 
 import sys
@@ -22,12 +25,14 @@ def main():
     sys.path.insert(0, str(project_dir))
 
     from blitz.compiler import compile_file, disassemble_program
+    from vm.bytecode import save_bytecode, load_bytecode
     from runtime.game import GameRuntime
 
     # Default game file
     game_file = project_dir / "game" / "shooter.blitz"
 
     # Parse command line arguments
+    compile_only = "--compile" in sys.argv
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if args:
         game_file = Path(args[0])
@@ -36,11 +41,27 @@ def main():
         print(f"Error: Game file not found: {game_file}")
         sys.exit(1)
 
-    print(f"Compiling {game_file}...")
-
     try:
-        # Compile the game
-        program = compile_file(str(game_file))
+        # Check if loading pre-compiled bytecode
+        if game_file.suffix == '.blitzc':
+            print(f"Loading bytecode {game_file}...")
+            program = load_bytecode(str(game_file))
+            print(f"Loaded {game_file.stat().st_size} bytes")
+        else:
+            print(f"Compiling {game_file}...")
+            # Compile the game
+            program = compile_file(str(game_file))
+
+            # Save bytecode
+            bytecode_file = game_file.with_suffix('.blitzc')
+            bytes_written = save_bytecode(program, str(bytecode_file))
+            print(f"Wrote bytecode: {bytecode_file} ({bytes_written} bytes)")
+
+            if compile_only:
+                print("\nCompilation complete (--compile mode)")
+                print(f"  Functions: {len(program.functions)}")
+                print(f"  Globals: {len(program.globals)}")
+                return
 
         # Show disassembly in debug mode
         if "--debug" in sys.argv:
