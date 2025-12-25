@@ -37,6 +37,10 @@ class EntityManager:
 
     MAX_ENTITIES = 512
 
+    # Game modes
+    MODE_VERTICAL = 0    # Bullets go up, enemies come down
+    MODE_HORIZONTAL = 1  # Bullets go right, enemies come from right
+
     def __init__(self, screen_width: int = 800, screen_height: int = 600):
         self.entities: List[Optional[Entity]] = [None] * self.MAX_ENTITIES
         self.active_count = 0
@@ -44,6 +48,11 @@ class EntityManager:
         self.screen_width = screen_width
         self.screen_height = screen_height
         self._scale = 1.0
+        self.game_mode = self.MODE_VERTICAL  # Default to vertical shooter
+
+    def set_game_mode(self, mode: int):
+        """Set the game mode (0 = vertical, 1 = horizontal)."""
+        self.game_mode = mode
 
     def set_screen_size(self, width: int, height: int):
         """Update screen size for velocity scaling."""
@@ -147,15 +156,25 @@ class EntityManager:
 
     def _get_default_velocity(self, entity_type: EntityType) -> tuple:
         """Get default velocity for entity type."""
-        # Note: In OpenGL, +Y is up
-        # Velocities scale with screen size
-        base_velocities = {
-            EntityType.PLAYER: (0, 0),
-            EntityType.BULLET: (0, 500),   # Bullets go up (+Y)
-            EntityType.ENEMY: (0, -100),   # Enemies go down (-Y)
-            EntityType.EXPLOSION: (0, 0),
-            EntityType.POWERUP: (0, -50),  # Powerups fall down (-Y)
-        }
+        # Velocities depend on game mode and scale with screen size
+        if self.game_mode == self.MODE_HORIZONTAL:
+            # Horizontal shooter: bullets go right, enemies come from right
+            base_velocities = {
+                EntityType.PLAYER: (0, 0),
+                EntityType.BULLET: (600, 0),    # Bullets go right (+X)
+                EntityType.ENEMY: (-150, 0),    # Enemies come from right (-X)
+                EntityType.EXPLOSION: (0, 0),
+                EntityType.POWERUP: (-50, 0),   # Powerups drift left
+            }
+        else:
+            # Vertical shooter (default): bullets go up, enemies come down
+            base_velocities = {
+                EntityType.PLAYER: (0, 0),
+                EntityType.BULLET: (0, 500),    # Bullets go up (+Y)
+                EntityType.ENEMY: (0, -100),    # Enemies go down (-Y)
+                EntityType.EXPLOSION: (0, 0),
+                EntityType.POWERUP: (0, -50),   # Powerups fall down (-Y)
+            }
         vx, vy = base_velocities.get(entity_type, (0, 0))
         return (vx * self._scale, vy * self._scale)
 

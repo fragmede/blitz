@@ -41,6 +41,7 @@ class GameRuntime:
         # Game state
         self.state = GameState()
         self.entities = EntityManager()
+        self.game_mode = 0  # 0 = vertical, 1 = horizontal
 
         # Input state
         self.keys_pressed: Set[str] = set()
@@ -95,6 +96,14 @@ class GameRuntime:
             lambda args: self._set_entity_y(int(args[0]), args[1]))
         self.vm.register_intrinsic(Intrinsic.GET_TYPE,
             lambda args: self._get_entity_type(int(args[0])))
+        self.vm.register_intrinsic(Intrinsic.SET_GAME_MODE,
+            lambda args: self._set_game_mode(int(args[0])))
+
+    def _set_game_mode(self, mode: int) -> float:
+        """Set game mode (0 = vertical, 1 = horizontal)."""
+        self.entities.set_game_mode(mode)
+        self.game_mode = mode
+        return 0.0
 
     def _destroy_entity(self, entity_id: int) -> float:
         self.entities.destroy(entity_id)
@@ -241,4 +250,5 @@ class GameRuntime:
             'u_score': self.state.score,
             'u_lives': self.state.lives,
             'u_entity_count': self.entities.active_count,
+            'u_game_mode': self.game_mode,
         }

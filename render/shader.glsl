@@ -12,6 +12,7 @@ uniform vec2 u_player_pos;
 uniform int u_score;
 uniform int u_lives;
 uniform int u_entity_count;
+uniform int u_game_mode;  // 0 = vertical, 1 = horizontal
 
 // Entity data texture (512 entities, RGBA32F)
 // Each texel: (x, y, type_flags, data)
@@ -89,15 +90,21 @@ float sdStar(vec2 p, float r, int n, float m) {
 vec4 renderPlayer(vec2 uv, vec2 pos) {
     vec2 p = uv - pos;
 
-    // Ship body (triangle pointing up - no Y flip needed in OpenGL coords)
+    // Rotate ship based on game mode
+    if (u_game_mode == 1) {
+        // Horizontal mode: rotate 90 degrees CCW so ship faces right
+        p = vec2(p.y, -p.x);
+    }
+
+    // Ship body (triangle pointing up in local coords)
     float ship = sdTriangle(p, 18.0);
 
-    // Wings (below the ship body now, since +Y is up)
+    // Wings (below the ship body in local coords)
     float wing1 = sdBox(p - vec2(-15.0, -5.0), vec2(8.0, 3.0));
     float wing2 = sdBox(p - vec2(15.0, -5.0), vec2(8.0, 3.0));
     ship = min(ship, min(wing1, wing2));
 
-    // Engine glow (below the ship)
+    // Engine glow (behind the ship in local coords)
     float engine = sdCircle(p - vec2(0.0, -15.0), 6.0 + sin(u_time * 20.0) * 2.0);
 
     vec4 color = vec4(0.0);
@@ -125,7 +132,15 @@ vec4 renderPlayer(vec2 uv, vec2 pos) {
 vec4 renderBullet(vec2 uv, vec2 pos) {
     vec2 p = uv - pos;
 
-    float bullet = sdBox(p, vec2(3.0, 8.0));
+    // Bullet shape depends on game mode
+    float bullet;
+    if (u_game_mode == 1) {
+        // Horizontal: wide bullet going right
+        bullet = sdBox(p, vec2(8.0, 3.0));
+    } else {
+        // Vertical: tall bullet going up
+        bullet = sdBox(p, vec2(3.0, 8.0));
+    }
 
     vec4 color = vec4(0.0);
 
@@ -145,6 +160,12 @@ vec4 renderEnemy(vec2 uv, vec2 pos, float data) {
 
     // Rotate slightly based on time
     float angle = sin(u_time * 2.0 + pos.x * 0.1) * 0.2;
+
+    // In horizontal mode, rotate enemies to face left
+    if (u_game_mode == 1) {
+        angle += 1.5708;  // Add 90 degrees (PI/2)
+    }
+
     float c = cos(angle), s = sin(angle);
     p = mat2(c, -s, s, c) * p;
 
@@ -236,7 +257,15 @@ vec4 renderBackground(vec2 uv) {
         float brightness = 0.3 + float(layer) * 0.2;
 
         vec2 starUV = uv;
-        starUV.y = mod(starUV.y + u_time * speed, u_resolution.y);
+
+        // Scroll direction depends on game mode
+        if (u_game_mode == 1) {
+            // Horizontal mode: stars scroll left (simulate moving right)
+            starUV.x = mod(starUV.x - u_time * speed, u_resolution.x);
+        } else {
+            // Vertical mode: stars scroll down (simulate moving up)
+            starUV.y = mod(starUV.y + u_time * speed, u_resolution.y);
+        }
 
         // Grid of potential star positions
         vec2 gridSize = vec2(40.0 - float(layer) * 10.0);
@@ -361,8 +390,16 @@ vec4 renderLives(vec2 uv, int lives) {
     for (int i = 0; i < lives && i < 5; i++) {
         vec2 p = uv - livesPos - vec2(float(i) * 25.0, 0.0);
 
-        // Mini ship icon
-        float ship = sdTriangle(p * vec2(1.0, -1.0), 8.0);
+        // Mini ship icon - orientation depends on game mode
+        vec2 tp = p;
+        if (u_game_mode == 1) {
+            // Horizontal mode: rotate to face right
+            tp = vec2(p.y, -p.x);
+        } else {
+            // Vertical mode: flip to face up
+            tp = p * vec2(1.0, -1.0);
+        }
+        float ship = sdTriangle(tp, 8.0);
 
         if (ship < 0.0) {
             color = vec4(0.3, 0.8, 1.0, 1.0);

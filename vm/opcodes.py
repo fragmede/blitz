@@ -161,6 +161,7 @@ class Intrinsic(IntEnum):
     SET_X = auto()
     SET_Y = auto()
     GET_TYPE = auto()
+    SET_GAME_MODE = auto()  # 0 = vertical (default), 1 = horizontal
 
     # System
     PRINT = auto()
@@ -190,6 +191,7 @@ INTRINSICS = {
     'set_x': (Intrinsic.SET_X, 2),
     'set_y': (Intrinsic.SET_Y, 2),
     'get_type': (Intrinsic.GET_TYPE, 1),
+    'set_game_mode': (Intrinsic.SET_GAME_MODE, 1),
     'print': (Intrinsic.PRINT, 1),
     'time': (Intrinsic.TIME, 0),
 }

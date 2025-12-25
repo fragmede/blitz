@@ -75,7 +75,7 @@ def run_game(runtime):
             # Get uniform locations
             self.uniforms = {}
             for name in ['u_resolution', 'u_time', 'u_player_pos', 'u_score',
-                         'u_lives', 'u_entity_count', 'u_entities']:
+                         'u_lives', 'u_entity_count', 'u_entities', 'u_game_mode']:
                 if name in self.prog:
                     self.uniforms[name] = self.prog[name]
 
@@ -131,6 +131,8 @@ def run_game(runtime):
                     self.uniforms['u_lives'].value = uniforms['u_lives']
                 if 'u_entity_count' in self.uniforms:
                     self.uniforms['u_entity_count'].value = uniforms['u_entity_count']
+                if 'u_game_mode' in self.uniforms:
+                    self.uniforms['u_game_mode'].value = uniforms['u_game_mode']
 
                 # Update entity texture - positions are already in correct coords
                 entity_data = self.runtime.get_entity_data()
