@@ -114,7 +114,7 @@ def run_game(runtime):
             self.ctx.clear(0.0, 0.0, 0.0)
             self.vao.render(moderngl.TRIANGLE_STRIP)
 
-        def key_event(self, key, action, modifiers):
+        def on_key_event(self, key, action, modifiers):
             """Handle key events."""
             if not self.runtime:
                 return
