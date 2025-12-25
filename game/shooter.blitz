@@ -1,0 +1,155 @@
+// BLITZ SHOOTER
+// A shoot'em up game written in the Blitz language
+
+// Global state
+var player_x = 400.0
+var player_y = 550.0
+var score = 0
+var fire_cooldown = 0.0
+var enemy_spawn_timer = 0.0
+var wave = 1
+var enemies_per_wave = 5
+var enemies_spawned = 0
+var wave_delay = 0.0
+
+// Movement speed
+var player_speed = 350.0
+var bullet_speed = 500.0
+var enemy_speed = 120.0
+
+// Called every frame with delta time
+fn update(dt) {
+    // Handle player movement
+    handle_input(dt)
+
+    // Update timers
+    update_timers(dt)
+
+    // Spawn enemies
+    spawn_enemies(dt)
+
+    // Update player bounds
+    clamp_player()
+}
+
+fn handle_input(dt) {
+    // Left/right movement
+    if key_left() {
+        player_x = player_x - player_speed * dt
+    }
+    if key_right() {
+        player_x = player_x + player_speed * dt
+    }
+
+    // Up/down movement (limited range)
+    if key_up() {
+        player_y = player_y - player_speed * dt * 0.5
+    }
+    if key_down() {
+        player_y = player_y + player_speed * dt * 0.5
+    }
+
+    // Shooting
+    if key_fire() and fire_cooldown <= 0.0 {
+        shoot()
+        fire_cooldown = 0.12
+    }
+}
+
+fn shoot() {
+    // Spawn bullet at player position
+    spawn_bullet(player_x, player_y - 25.0)
+
+    // Dual shot at higher scores
+    if score >= 1000 {
+        spawn_bullet(player_x - 12.0, player_y - 20.0)
+        spawn_bullet(player_x + 12.0, player_y - 20.0)
+    }
+}
+
+fn update_timers(dt) {
+    if fire_cooldown > 0.0 {
+        fire_cooldown = fire_cooldown - dt
+    }
+
+    if wave_delay > 0.0 {
+        wave_delay = wave_delay - dt
+    }
+}
+
+fn spawn_enemies(dt) {
+    // Wait for wave delay
+    if wave_delay > 0.0 {
+        return 0.0
+    }
+
+    // Spawn timer
+    enemy_spawn_timer = enemy_spawn_timer + dt
+
+    // Spawn rate increases with wave
+    var spawn_interval = 1.5 - wave * 0.1
+    if spawn_interval < 0.3 {
+        spawn_interval = 0.3
+    }
+
+    if enemy_spawn_timer >= spawn_interval {
+        if enemies_spawned < enemies_per_wave {
+            // Random x position
+            var spawn_x = 50.0 + random() * 700.0
+
+            spawn_enemy(spawn_x, -30.0, 0.0)
+            enemies_spawned = enemies_spawned + 1
+            enemy_spawn_timer = 0.0
+        }
+    }
+
+    // Check if wave complete
+    if enemies_spawned >= enemies_per_wave {
+        // Start next wave after delay
+        wave = wave + 1
+        enemies_per_wave = enemies_per_wave + 2
+        enemies_spawned = 0
+        wave_delay = 2.0
+        enemy_spawn_timer = 0.0
+
+        // Increase difficulty
+        enemy_speed = enemy_speed + 10.0
+    }
+}
+
+fn clamp_player() {
+    // Keep player on screen
+    if player_x < 30.0 {
+        player_x = 30.0
+    }
+    if player_x > 770.0 {
+        player_x = 770.0
+    }
+    if player_y < 400.0 {
+        player_y = 400.0
+    }
+    if player_y > 570.0 {
+        player_y = 570.0
+    }
+}
+
+// Called when two entities collide
+fn on_collision(type_a, type_b, id_a, id_b) {
+    // Bullet hitting enemy (type 2 = bullet, type 3 = enemy)
+    if type_a == 2 and type_b == 3 {
+        destroy(id_a)
+        destroy(id_b)
+        score = score + 100
+
+        // Bonus for streak
+        if score % 500 == 0 {
+            score = score + 50
+        }
+    }
+
+    // Enemy hitting player (type 1 = player, type 3 = enemy)
+    if type_a == 1 and type_b == 3 {
+        destroy(id_b)
+        // Player damage handled by runtime
+    }
+}
