@@ -89,16 +89,16 @@ float sdStar(vec2 p, float r, int n, float m) {
 vec4 renderPlayer(vec2 uv, vec2 pos) {
     vec2 p = uv - pos;
 
-    // Ship body (triangle pointing up)
-    float ship = sdTriangle(p * vec2(1.0, -1.0), 18.0);
+    // Ship body (triangle pointing up - no Y flip needed in OpenGL coords)
+    float ship = sdTriangle(p, 18.0);
 
-    // Wings
-    float wing1 = sdBox(p - vec2(-15.0, 5.0), vec2(8.0, 3.0));
-    float wing2 = sdBox(p - vec2(15.0, 5.0), vec2(8.0, 3.0));
+    // Wings (below the ship body now, since +Y is up)
+    float wing1 = sdBox(p - vec2(-15.0, -5.0), vec2(8.0, 3.0));
+    float wing2 = sdBox(p - vec2(15.0, -5.0), vec2(8.0, 3.0));
     ship = min(ship, min(wing1, wing2));
 
-    // Engine glow
-    float engine = sdCircle(p - vec2(0.0, 15.0), 6.0 + sin(u_time * 20.0) * 2.0);
+    // Engine glow (below the ship)
+    float engine = sdCircle(p - vec2(0.0, -15.0), 6.0 + sin(u_time * 20.0) * 2.0);
 
     vec4 color = vec4(0.0);
 

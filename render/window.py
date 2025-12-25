@@ -91,13 +91,21 @@ def run_game(runtime):
                 # Get uniform values
                 uniforms = self.runtime.get_render_uniforms()
 
-                # Update uniforms
+                # Calculate scale factor for Retina/HiDPI displays
+                buffer_size = self.wnd.buffer_size
+                window_size = self.wnd.size
+                scale_x = buffer_size[0] / window_size[0]
+                scale_y = buffer_size[1] / window_size[1]
+
+                # Update uniforms - use actual framebuffer size for resolution
                 if 'u_resolution' in self.uniforms:
-                    self.uniforms['u_resolution'].value = uniforms['u_resolution']
+                    self.uniforms['u_resolution'].value = buffer_size
                 if 'u_time' in self.uniforms:
                     self.uniforms['u_time'].value = uniforms['u_time']
                 if 'u_player_pos' in self.uniforms:
-                    self.uniforms['u_player_pos'].value = uniforms['u_player_pos']
+                    # Scale player position to framebuffer coordinates
+                    px, py = uniforms['u_player_pos']
+                    self.uniforms['u_player_pos'].value = (px * scale_x, py * scale_y)
                 if 'u_score' in self.uniforms:
                     self.uniforms['u_score'].value = uniforms['u_score']
                 if 'u_lives' in self.uniforms:
@@ -105,8 +113,11 @@ def run_game(runtime):
                 if 'u_entity_count' in self.uniforms:
                     self.uniforms['u_entity_count'].value = uniforms['u_entity_count']
 
-                # Update entity texture
-                entity_data = self.runtime.get_entity_data()
+                # Update entity texture - scale positions for HiDPI
+                entity_data = self.runtime.get_entity_data().copy()
+                # Scale x and y positions (columns 0 and 1)
+                entity_data[:, 0] *= scale_x
+                entity_data[:, 1] *= scale_y
                 self.entity_texture.write(entity_data.tobytes())
                 self.entity_texture.use(0)
 
