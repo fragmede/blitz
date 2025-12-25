@@ -147,13 +147,22 @@ shader/
 
 ```bash
 # Install dependencies
-pip install moderngl moderngl-window numpy
+uv pip install moderngl moderngl-window numpy pyglet
 
 # Run the game
-python main.py game/shooter.blitz
+uv run python main.py
 
-# Or compile only
-python -m blitz.compiler game/shooter.blitz -o game/shooter.blitzc
+# Or run without graphics (console mode, no dependencies needed)
+uv run python main.py
+
+# Compile and show bytecode disassembly
+uv run python main.py --debug
+```
+
+Or with standard pip:
+```bash
+pip install moderngl moderngl-window numpy pyglet
+python main.py
 ```
 
 ## Technical Details
